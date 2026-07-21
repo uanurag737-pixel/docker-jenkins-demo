@@ -5,30 +5,21 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo 'Source Code Downloaded Successfully'
+                echo 'Source Code Downloaded'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building Docker Application'
-                sh 'pwd'
-                sh 'ls -la'
+                sh 'docker --version'
+                sh 'docker build -t docker-jenkins-demo:v1 .'
             }
         }
 
-        stage('Test') {
+        stage('Verify Image') {
             steps {
-                echo 'Testing Application'
-                sh 'date'
+                sh 'docker images'
             }
         }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deployment Completed Successfully'
-            }
-        }
-
     }
 }
