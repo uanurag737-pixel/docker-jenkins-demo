@@ -1,4 +1,5 @@
 pipeline {
+
     agent any
 
     environment {
@@ -9,7 +10,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo 'Source Code Downloaded'
+                echo "Downloading Source Code"
             }
         }
 
@@ -19,7 +20,7 @@ pipeline {
             }
         }
 
-        stage('Tag Docker Image') {
+        stage('Tag Image') {
             steps {
                 sh 'docker tag docker-jenkins-demo:v1 $IMAGE_NAME'
             }
@@ -27,12 +28,15 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                usernameVariable: 'USERNAME',
-                passwordVariable: 'PASSWORD')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
 
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
-
+                    sh '''
+                    echo $PASSWORD | docker login -u $USERNAME --password-stdin
+                    '''
                 }
             }
         }
@@ -42,5 +46,34 @@ pipeline {
                 sh 'docker push $IMAGE_NAME'
             }
         }
+
+        stage('Stop Old Container') {
+            steps {
+                sh '''
+                docker stop mywebsite || true
+                docker rm mywebsite || true
+                '''
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh '''
+                docker run -d \
+                --name mywebsite \
+                -p 8085:80 \
+                $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                docker ps
+                '''
+            }
+        }
+
     }
 }
